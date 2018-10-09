@@ -13,15 +13,20 @@ var client = new Twitter(keys.twitter);
 var limitTweets = 20;
 console.log(liriReturn);
 
-// spotify
+// spotify-this-song
 function spotifyThisSong() {
-    spotify.search({ type: 'track', query: name, limit: '1'}, function(err, data) {
+  console.log("     *** Tune In & Tune Out! ***")
+  var searchTrack;
+  if(name === undefined) {
+    searchTrack = "The Sign, Ace of Base";
+    console.log("     *** You didn't enter a song name. You get Ace of Base! ***")
+  } else {
+    searchTrack = name;
+  }
+    spotify.search({ type: 'track', query:searchTrack, limit: '1'}, function(err, data) {
       if (err) {
         console.log('Error occured: ' + err);
       } else {
-        // Returns JSON info for selected track
-        // console.log(JSON.stringify(data, null, 2));
-  
         console.log("\nArtist: " + JSON.stringify(data.tracks.items[0].artists[0].name, null, 2) + "\n");
         console.log("Song Title: " + JSON.stringify(data.tracks.items[0].name) + "\n");
         console.log("Album " + JSON.stringify(data.tracks.items[0].album.name) + "\n");
@@ -29,10 +34,10 @@ function spotifyThisSong() {
       }
     });
   };
-// twitter
+// my-tweets
 function myTweets() {
  
-    var params = {screen_name: 'AthenaOlson12', count: limitTweets};
+    var params = {screen_name: 'AthenaOlson12', count: 10};
     client.get('statuses/user_timeline', params, function(error, tweets, response) {
       if (error) {
         console.log(error);
@@ -47,26 +52,22 @@ function myTweets() {
       });
     };
 
-// MOVIE DBM API
-// -------------------------------------------------------------------
-// THIS WORKS
+// movie-this
 function movieThis() {
-    console.log("*** Popcorn, anyone? ***")
-
-    var nodeArgs = process.argv;
-    var movieName = "";
-    for (var i = 3; i < nodeArgs.length; i++) { 
-        if (i > 3 && i < nodeArgs.length) {
-      movieName = movieName + "+" + nodeArgs[i];
+    console.log("     *** Popcorn, anyone? ***")
+    var movieName;
+    if(name === undefined) {
+      movieName = "Mr. Nobody";
+      console.log("     *** You didn't enter a movie name. Try watching Mr. Nobody! ***")
     } else {
-      movieName += nodeArgs[i];
-     }
-    }
+      movieName = name;
+    };
+
     var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
     
     request(queryUrl, function(error, response, body) {
     
-      if (!error && response.statusCode === 200) {
+    if (!error && response.statusCode === 200) {
     
         var body = JSON.parse(body);
           console.log("\nMovie Title: " + body.Title + "\n ");
@@ -77,42 +78,17 @@ function movieThis() {
           console.log("Plot: " + body.Plot + "\n ");
           console.log("Actors: " + body.Actors + "\n ");
           console.log("Rotten Tomatoes Rating: " + body.Ratings[1].Value + "\n ");
+          fs.appendFile("log.txt", "\nMovie Title: " + body.Title + "\n ", function(error) {
+            if (error) {
+              return console.log(error);
+            }
+          });
+
       } else {
-        console.log(error);
+        console.log(movieName);
       };
     });
     }
-
-// DO-WHAT-IT-SAYS 
-// -------------------------------------------------------------------
-// Function takes the data from my random.txt file and 
-// passes it as a search value in the Spotify function
-
-function random() {
-
-    fs.readFile("./random.txt", 'utf8', function(err, data) {
-      if (err) {
-        return console.log(err);
-      }
-      else {
-        console.log(data);
-  
-        //Converst data in text file into array
-        var arr = data.split(",");
-        value = arr[1];
-          // If command name at index[0] matches the string, invoke the function
-          if(arr[0] == "movie-this") {
-            movieThis(value);
-          }
-          else if (arr[0] == "spotify-this-song") {
-            mySpotify(value);
-          }
-          else if (arr[0] == "my-tweets") {
-            myTweets();
-          }
-      }
-    });  
-  };
 
 // command switches
 switch (liriReturn) {
@@ -140,39 +116,26 @@ switch (liriReturn) {
 
 function doWhatItSays() {
 
-    fs.readFile("./random.txt", 'utf8', function(err, data) {
-      if (err) {
-        return console.log(err);
-      }
-      else {
-        console.log(data);
-  
-        //Converts data in text file into array
-        var arr = data.split(",");
-        value = arr[1];
-          // If command name at index[0] matches the string, invoke the function
-          if(arr[0] == "movie-this") {
-            myMovie(value);
-          }
-          else if (arr[0] == "spotify-this-song") {
-            mySpotify(value);
-          }
-          else if (arr[0] == "my-tweets") {
-            myTweets();
-          }
-      }
-    });  
-  };
+  fs.readFile("./random.txt", "utf8", function(err, data) {
+    if (err) {
+      return console.log(err);
+    }
+    else {
+      console.log(data);
 
-
-
-// // end code from documentation
-
-// var nodeArgs = process.argv[2];
-
-// var song = "";node
-
-// for (var i = 2; i < nodeArge.length; i++) {
-//     song = song + " " + nodeArgs[i];
-// }
-// console.log("Searching for" + song);
+      //Converst data in text file into array
+      var arr = data.split(",");
+      value = arr[1];
+        // If command name at index[0] matches the string, invoke the function
+        if(arr[0] === "movie-this") {
+          movieThis(value);
+        }
+        else if (arr[0] === "spotify-this-song") {
+          spotifyThisSong(value);
+        }
+        else if (arr[0] === "my-tweets") {
+          myTweets();
+        }
+    }
+  });  
+};
